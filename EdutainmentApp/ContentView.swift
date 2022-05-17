@@ -7,35 +7,44 @@
 
 import SwiftUI
 
+enum StateOfGame {
+    case preparing
+    case playing
+}
+
 struct ContentView: View {
     @State private var amountQuestions = 10
     @State private var multiplyTables = 6
-    @State private var isStarted = false
     
-    @State private var questionTable2 = ["2 x 2", "2 x 3", "2 x 4", "2 x 5",
-                                    "2 x 6", "2 x 7", "2 x 8", "2 x 9"]
+    @State private var stateGame = StateOfGame.preparing
     
-    @State private var questionTable3 = ["3 x 2", "3 x 3", "3 x 4", "3 x 5",
-                                    "3 x 6", "3 x 7", "3 x 8", "3 x 9"]
+    @State private var playerScore = 0
+    @State private var round = 0
     
-    @State private var questionTable4 = ["4 x 2", "4 x 3", "4 x 4", "4 x 5",
-                                    "4 x 6", "4 x 7", "4 x 8", "4 x 9"]
+    @State private var finalMessage = ""
+    @State private var isShowingFinal = false
     
-    @State private var questionTable5 = ["5 x 2", "5 x 3", "5 x 4", "5 x 5",
-                                    "5 x 6", "5 x 7", "5 x 8", "5 x 9"]
+    @State var firstDigit = 0
     
-    @State private var questionTable6 = ["6 x 2", "6 x 3", "6 x 4", "6 x 5",
-                                    "6 x 6", "6 x 7", "6 x 8", "6 x 9"]
+    @State var secondDigit = Int.random(in: 2...9)
     
-    @State private var questionTable7 = ["7 x 2", "7 x 3", "7 x 4", "7 x 5",
-                                    "7 x 6", "7 x 7", "7 x 8", "7 x 9"]
+    var correctAnswer: Int {
+        return firstDigit * secondDigit
+    }
     
-    @State private var questionTable8 = ["8 x 2", "8 x 3", "8 x 4", "8 x 5",
-                                    "8 x 6", "8 x 7", "8 x 8", "8 x 9"]
     
-    @State private var questionTable9 = ["9 x 2", "9 x 3", "9 x 4", "9 x 5",
-                                    "9 x 6", "9 x 7", "9 x 8", "9 x 9"]
-                                   
+    var wrongAnswers: [Int] = [4,6,8,10,12,14,16,18,
+                               6,9,12,15,18,21,24,27,
+                               8,12,16,20,24,28,32,36,
+                               10,15,20,25,30,35,40,45,
+                               12,18,24,30,36,42,48,54,
+                               14,21,28,35,42,49,56,63,
+                               16,24,32,40,48,56,64,72,
+                               18,27,36,45,54,63,72,81]
+    
+    var arrayRightWrong: [Int] {
+        return [correctAnswer, wrongAnswers.shuffled().randomElement()!]
+    }
     
     var body: some View {
         ZStack {
@@ -46,43 +55,86 @@ struct ContentView: View {
             ], center: .topLeading, startRadius: 410, endRadius: 850)
             .ignoresSafeArea()
             
-            
             VStack {
-                Text("How much questions you want?")
-                    .padding()
-                Stepper("Quantity of questions - \(amountQuestions)", value: $amountQuestions, in: 5...15, step: 5)
-                
-                Text("Which multiplictaions tables \n you want to practice?")
-                Stepper("from 2 to \(multiplyTables)", value: $multiplyTables, in: 2...9, step: 1)
-                
-                Button("Start the game") {}
-                
-                if isStarted == false {
-                    Text("")
+                if stateGame == .preparing {
+                    VStack {
+                        Text("How much questions you want?")
+                            .padding()
+                        Stepper("Quantity of questions - \(amountQuestions)", value: $amountQuestions, in: 5...15, step: 5)
+                    }
+                    
+                    VStack {
+                        Text("Which multiplictaions tables \n you want to practice?")
+                        Stepper("from 2 to \(multiplyTables)", value: $multiplyTables, in: 2...9, step: 1)
+                    }
+                    
+                    Button("Start the game") {
+                        firstDigit = Int.random(in: 2...multiplyTables)
+                        stateGame = .playing
+                    }
                 }
                 
                 
                 Spacer()
-                
-                HStack {
-                    Button("First button") {
+                if stateGame == .playing {
+                    VStack {
+                        Text("player score is \(playerScore)")
                         
+                        Text("what is \(firstDigit) x \(secondDigit)?")
                     }
-                    .padding()
-                    .background(.green)
-                    .clipShape(Capsule())
                     
-                    Button("Second button") {
-                        
+                    Spacer()
+                    
+                    HStack {
+                        ForEach(0..<2) { number in
+                            Button {
+                                isRightAnswer(number: number)
+                            } label: {
+                                Text("\(arrayRightWrong[number])")
+                            }
+                        }
                     }
-                    .padding()
-                    .background(.green)
-                    .clipShape(Capsule())
                 }
+
             }
         }
+        .alert("Final score is \(playerScore)", isPresented: $isShowingFinal) {
+            Button("Ok", action: reset)
+        }
     }
+    
+    
+    func isRightAnswer(number: Int) {
+        if arrayRightWrong[number] == correctAnswer {
+            playerScore += 1
+        } else {
+            playerScore -= 1
+        }
+        
+        endRound()
+    }
+    
+    func endRound() {
+        if round == amountQuestions - 1 {
+            isShowingFinal = true
+        } else {
+            round += 1
+            firstDigit = Int.random(in: 2...multiplyTables)
+            secondDigit = Int.random(in: 2...9)
+        }
+    }
+    
+    func reset() {
+        playerScore = 0
+        round = 0
+        firstDigit = Int.random(in: 2...multiplyTables)
+        secondDigit = Int.random(in: 2...9)
+        stateGame = .preparing
+    }
+    
 }
+
+
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
