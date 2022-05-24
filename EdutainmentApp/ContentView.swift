@@ -17,7 +17,6 @@ struct ContentView: View {
     @State private var amountQuestions = 10
     @State private var multiplyTables = 6
     @State private var difficultyRange = 1
-    @State private var difficulty = 0
     
     //Game State
     @State private var stateGame = StateOfGame.preparing
@@ -79,7 +78,7 @@ struct ContentView: View {
                             .font(.headline)
                         Stepper("From 2 to \(multiplyTables)", value: $multiplyTables, in: 2...9, step: 1)
                             .padding()
-                            
+                        
                     }
                     
                     VStack {
@@ -104,11 +103,7 @@ struct ContentView: View {
                     
                     Button("Start the game") {
                         firstDigit = Int.random(in: 2...multiplyTables)
-                        arrayRightWrong = [correctAnswer,
-                                           wrongAnswers.shuffled().randomElement()!,
-                                           wrongAnswers.shuffled().randomElement()!,
-                                           wrongAnswers.shuffled().randomElement()!
-                        ]
+                        questionsButtons()
                         withAnimation {
                             stateGame = .playing
                         }
@@ -141,13 +136,13 @@ struct ContentView: View {
                                     isRightAnswer(number: number)
                                 } label: {
                                     Text("\(arrayRightWrong[number])")
-                                      .padding(30)
-                                      .background(.green)
-                                      .clipShape(Circle())
-                                      .foregroundColor(.yellow)
-                                      .rotation3DEffect(
-                                        .degrees(correctAnimation && correctAnswer == arrayRightWrong[number] ? 360 : 0)
-                                        , axis: (x: 0, y: 1, z: 0))
+                                        .padding(30)
+                                        .background(.green)
+                                        .clipShape(Circle())
+                                        .foregroundColor(.yellow)
+                                        .rotation3DEffect(
+                                            .degrees(correctAnimation && correctAnswer == arrayRightWrong[number] ? 360 : 0)
+                                            , axis: (x: 0, y: 1, z: 0))
                                 }
                             }
                         }
@@ -155,7 +150,7 @@ struct ContentView: View {
                     }
                     
                 }
-
+                
             }
         }
         .alert("Final score is \(playerScore)", isPresented: $isShowingFinal) {
@@ -172,7 +167,12 @@ struct ContentView: View {
                 correctAnimation.toggle()
             }
         } else {
-            playerScore -= 1
+            if playerScore == 0 {
+
+            } else {
+                playerScore -= 1
+            }
+            
         }
         
         endRound()
@@ -187,12 +187,11 @@ struct ContentView: View {
             firstDigit = Int.random(in: 2...multiplyTables)
             secondDigit = Int.random(in: 2...9)
             
-            arrayRightWrong = [correctAnswer,
-                               wrongAnswers.shuffled().randomElement()!,
-                               wrongAnswers.shuffled().randomElement()!,
-                               wrongAnswers.shuffled().randomElement()!
-            ]
-            arrayRightWrong = arrayRightWrong.shuffled()
+            questionsButtons()
+            
+            withAnimation {
+                arrayRightWrong = arrayRightWrong.shuffled()
+            }
         }
     }
     
@@ -203,7 +202,32 @@ struct ContentView: View {
         firstDigit = Int.random(in: 2...multiplyTables)
         secondDigit = Int.random(in: 2...9)
         
-        stateGame = .preparing
+        withAnimation {
+            stateGame = .preparing
+        }
+    }
+    
+    func questionsButtons() {
+        switch difficultyRange {
+        case 0: arrayRightWrong = [correctAnswer,
+                                   wrongAnswers.shuffled().randomElement()!,
+        ]
+        case 1: arrayRightWrong = [correctAnswer,
+                                   wrongAnswers.shuffled().randomElement()!,
+                                   wrongAnswers.shuffled().randomElement()!,
+        ]
+        case 2: arrayRightWrong = [correctAnswer,
+                                   wrongAnswers.shuffled().randomElement()!,
+                                   wrongAnswers.shuffled().randomElement()!,
+                                   wrongAnswers.shuffled().randomElement()!
+        ]
+        default:
+            arrayRightWrong = [correctAnswer,
+                               wrongAnswers.shuffled().randomElement()!,
+                               wrongAnswers.shuffled().randomElement()!,
+                               wrongAnswers.shuffled().randomElement()!
+            ]
+        }
     }
     
 }
